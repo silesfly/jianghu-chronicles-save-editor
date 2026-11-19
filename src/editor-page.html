@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="ko" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>강호록 세이브 에디터 v1.0.0</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #f1ebe0;
+      --paper: #fffaf0;
+      --wash: #f7efe1;
+      --ink: #302721;
+      --muted: #66594b;
+      --line: #cfbeaa;
+      --accent: #8a402e;
+      --accent-ink: #fffaf0;
+      --accent-wash: #f3e2d7;
+      --ok: #325b48;
+      --ok-wash: #e5eee3;
+      --warning: #795014;
+      --warning-wash: #f7ead0;
+      --danger: #9a352c;
+      --danger-wash: #f6e3dd;
+      --outline: #93513b;
+      --scrim: rgb(38 25 17 / 55%);
+      --shadow: 0 16px 40px rgb(59 38 21 / 10%);
+      --radius: .625rem;
+      font-family: "맑은 고딕","Malgun Gothic",system-ui,-apple-system,sans-serif;
+      line-height: 1.55;
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --canvas: #1e1916;
+      --paper: #28211d;
+      --wash: #302720;
+      --ink: #f2e8db;
+      --muted: #c9b7a4;
+      --line: #665447;
+      --accent: #e5a28d;
+      --accent-ink: #2c1914;
+      --accent-wash: #482c23;
+      --ok: #b6dac5;
+      --ok-wash: #25392f;
+      --warning: #f1cd8b;
+      --warning-wash: #423420;
+      --danger: #f5b0a7;
+      --danger-wash: #472b27;
+      --outline: #f4b29d;
+      --scrim: rgb(0 0 0 / 65%);
+      --shadow: 0 16px 40px rgb(0 0 0 / 24%);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]):not([data-theme="dark"]) {
+        color-scheme: dark;
+        --canvas: #1e1916;
+        --paper: #28211d;
+        --wash: #302720;
+        --ink: #f2e8db;
+        --muted: #c9b7a4;
+        --line: #665447;
+        --accent: #e5a28d;
+        --accent-ink: #2c1914;
+        --accent-wash: #482c23;
+        --ok: #b6dac5;
+        --ok-wash: #25392f;
+        --warning: #f1cd8b;
+        --warning-wash: #423420;
+        --danger: #f5b0a7;
+        --danger-wash: #472b27;
+        --outline: #f4b29d;
+        --scrim: rgb(0 0 0 / 65%);
+        --shadow: 0 16px 40px rgb(0 0 0 / 24%);
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      border-block-start: .25rem solid var(--accent);
+      background: var(--canvas);
+      color: var(--ink);
+    }
+
+    button, select, input, textarea { font: inherit; }
+    button, select, input[type="file"]::file-selector-button {
+      min-block-size: 2.75rem;
+      padding: .45rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: .375rem;
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    button, select, input[type="file"]::file-selector-button { cursor: pointer; }
+    button:enabled:hover, select:enabled:hover,
+    input[type="file"]:enabled::file-selector-button:hover { background: var(--wash); }
+    button:disabled { cursor: default; opacity: .6; }
+    :focus-visible { outline: 2px solid var(--outline); outline-offset: 3px; }
+
+    .primary, .primary:enabled:hover {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .primary:enabled:hover { text-decoration: underline; }
+
+    .shell {
+      max-inline-size: 83rem;
+      margin-inline: auto;
+      padding: clamp(1rem, 3vw, 2.5rem);
+    }
+
+    .masthead {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding-block-end: 1rem;
+      border-block-end: 3px double var(--line);
+    }
+
+    h1, h2, h3, p { margin-block-start: 0; }
+    h1 { margin-block-end: 0; font-size: clamp(1.45rem, 4vw, 2.25rem); }
+    h2 { margin-block-end: 1rem; font-size: 1.15rem; }
+    h3 { margin-block-end: .65rem; font-size: 1rem; }
+    .version { color: var(--muted); font-size: .55em; font-weight: 400; white-space: nowrap; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .25rem .65rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--wash);
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .badge::before {
+      content: "";
+      inline-size: .45rem;
+      block-size: .45rem;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge[data-runtime="server"], .badge[data-runtime="native"], .badge[data-state="success"] {
+      background: var(--ok-wash);
+      color: var(--ok);
+    }
+
+    .badge[data-state="warning"] { background: var(--warning-wash); color: var(--warning); }
+    .badge[data-state="error"] { background: var(--danger-wash); color: var(--danger); }
+
+    .topbar, .toolbar-group, .field-inline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .65rem;
+    }
+
+    .topbar {
+      justify-content: space-between;
+      margin-block: 1rem 1.5rem;
+      padding: .85rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--wash);
+    }
+
+    .field-inline { min-inline-size: 0; font-size: .9rem; }
+    input[type="file"] { max-inline-size: 100%; color: var(--ink); }
+    input[type="file"]::file-selector-button { margin-inline-end: .5rem; }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: .4rem;
+      padding-block-end: .65rem;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .tabs [role="tab"] { font-weight: 700; }
+
+    .tabs [aria-selected="true"] {
+      border-color: var(--accent);
+      background: var(--accent-wash);
+      color: var(--accent);
+    }
+
+    .panel { padding-block: 1.2rem; scroll-margin-block-start: 1rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+      gap: .9rem;
+      align-items: start;
+    }
+
+    .card {
+      min-inline-size: 0;
+      padding: clamp(.85rem, 2vw, 1.25rem);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .card p:last-child { margin-block-end: 0; }
+    .card-wide { grid-column: 1 / -1; }
+    .muted { color: var(--muted); }
+
+    .table-scroll {
+      max-inline-size: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      inline-size: 100%;
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+    }
+
+    caption { padding: .5rem; color: var(--muted); text-align: start; }
+    th, td { padding: .65rem .75rem; border-block-end: 1px solid var(--line); text-align: start; }
+    th { background: var(--wash); word-break: keep-all; }
+    td { overflow-wrap: anywhere; }
+    .numeric { text-align: end; }
+
+    dialog {
+      inline-size: min(38rem, calc(100% - 2rem));
+      max-block-size: calc(100dvh - 2rem);
+      margin: auto;
+      padding: 1.25rem;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-block-start: .25rem solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    dialog::backdrop { background: var(--scrim); }
+
+    .dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: .6rem;
+      margin-block-start: 1rem;
+      padding-block-start: 1rem;
+      border-block-start: 1px solid var(--line);
+    }
+
+    #toast {
+      position: fixed;
+      inset-inline-end: 1rem;
+      inset-block-end: 1rem;
+      z-index: 1;
+      max-inline-size: min(30rem, calc(100% - 2rem));
+      padding: .75rem 1rem;
+      border: 1px solid var(--line);
+      border-inline-start: .25rem solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow-wrap: anywhere;
+    }
+
+    #toast:empty {
+      inline-size: 1px;
+      block-size: 1px;
+      padding: 0;
+      overflow: hidden;
+      border: 0;
+      clip-path: inset(50%);
+    }
+
+    @media (max-width: 48rem) {
+      .tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 24rem) {
+      .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .toolbar-group { inline-size: 100%; }
+      .toolbar-group > button { flex: 1 1 auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="masthead">
+        <h1>강호록 세이브 에디터 <span class="version">v1.0.0</span></h1>
+        <span id="runtime-badge" class="badge" data-runtime="offline" role="status">브라우저 오프라인</span>
+      </div>
+
+      <div class="topbar" role="group" aria-label="세이브 작업">
+        <div class="toolbar-group">
+          <label class="field-inline" for="file-input">
+            <span>세이브 열기</span>
+            <input id="file-input" type="file" accept=".sav">
+          </label>
+          <button id="btn-demo" type="button">예제 불러오기</button>
+        </div>
+        <div class="toolbar-group">
+          <label class="field-inline" for="theme-select">
+            <span>테마</span>
+            <select id="theme-select">
+              <option value="auto" selected>자동</option>
+              <option value="light">밝게</option>
+              <option value="dark">어둡게</option>
+            </select>
+          </label>
+          <button id="btn-validate" type="button" disabled>검증</button>
+          <button id="btn-save" class="primary" type="button" disabled aria-haspopup="dialog">저장 및 다운로드</button>
+        </div>
+        <div class="toolbar-group" role="group" aria-label="네이티브 기능">
+          <button id="btn-discover" type="button" hidden>세이브 찾기</button>
+          <button id="btn-backups" type="button" hidden aria-haspopup="dialog">백업 관리</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="tabs" role="tablist" aria-label="편집 항목">
+        <button id="tab-summary" type="button" role="tab" aria-selected="true" aria-controls="panel-summary">요약</button>
+        <button id="tab-students" type="button" role="tab" aria-selected="false" aria-controls="panel-students" tabindex="-1">제자</button>
+        <button id="tab-skills" type="button" role="tab" aria-selected="false" aria-controls="panel-skills" tabindex="-1">무학</button>
+        <button id="tab-warehouse" type="button" role="tab" aria-selected="false" aria-controls="panel-warehouse" tabindex="-1">창고</button>
+        <button id="tab-world" type="button" role="tab" aria-selected="false" aria-controls="panel-world" tabindex="-1">세계</button>
+        <button id="tab-diff" type="button" role="tab" aria-selected="false" aria-controls="panel-diff" tabindex="-1">변경 내역</button>
+      </div>
+
+      <section id="panel-summary" class="panel" role="tabpanel" aria-labelledby="tab-summary" tabindex="0">
+        <div class="grid">
+          <section class="card card-wide">
+            <h2>세이브 요약</h2>
+            <div id="save-summary">
+              <p class="muted">편집할 세이브 파일을 열거나 예제를 불러오세요.</p>
+            </div>
+          </section>
+          <section class="card">
+            <h2>재화</h2>
+            <div id="currency-fields"></div>
+          </section>
+          <section class="card">
+            <h2>프리셋</h2>
+            <div id="preset-controls"></div>
+          </section>
+          <section class="card">
+            <h2>전투 계산기</h2>
+            <div id="combat-calculator"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="panel-students" class="panel" role="tabpanel" aria-labelledby="tab-students" tabindex="0" hidden>
+        <div class="grid">
+          <section class="card card-wide">
+            <h2>제자 목록</h2>
+            <div id="student-list" class="table-scroll"></div>
+          </section>
+          <section class="card">
+            <h2>능력치</h2>
+            <div id="student-stats"></div>
+          </section>
+          <section class="card">
+            <h2>특성</h2>
+            <div id="student-traits"></div>
+          </section>
+          <section class="card">
+            <h2>칭호</h2>
+            <div id="student-titles"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="panel-skills" class="panel" role="tabpanel" aria-labelledby="tab-skills" tabindex="0" hidden>
+        <div class="grid">
+          <section class="card">
+            <h2>무학</h2>
+            <div id="martial-skills" class="table-scroll"></div>
+          </section>
+          <section class="card">
+            <h2>심법</h2>
+            <div id="cultivation-techniques" class="table-scroll"></div>
+          </section>
+          <section class="card">
+            <h2>내공</h2>
+            <div id="internal-energy"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="panel-warehouse" class="panel" role="tabpanel" aria-labelledby="tab-warehouse" tabindex="0" hidden>
+        <div class="grid">
+          <section class="card">
+            <h2>병기</h2>
+            <div id="weapon-list" class="table-scroll"></div>
+          </section>
+          <section class="card">
+            <h2>갑옷</h2>
+            <div id="armor-list" class="table-scroll"></div>
+          </section>
+          <section class="card">
+            <h2>창고</h2>
+            <div id="warehouse-list" class="table-scroll"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="panel-world" class="panel" role="tabpanel" aria-labelledby="tab-world" tabindex="0" hidden>
+        <div class="grid">
+          <section class="card">
+            <h2>전각</h2>
+            <div id="building-list" class="table-scroll"></div>
+          </section>
+          <section class="card">
+            <h2>외교</h2>
+            <div id="diplomacy-list" class="table-scroll"></div>
+          </section>
+          <section class="card">
+            <h2>시세</h2>
+            <div id="market-prices" class="table-scroll"></div>
+          </section>
+          <section class="card">
+            <h2>요약슬롯</h2>
+            <div id="summary-slots"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="panel-diff" class="panel" role="tabpanel" aria-labelledby="tab-diff" tabindex="0" hidden>
+        <div class="grid">
+          <section class="card card-wide">
+            <h2>변경 내역</h2>
+            <div id="change-list" class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">항목</th>
+                    <th scope="col">변경 전</th>
+                    <th scope="col">변경 후</th>
+                  </tr>
+                </thead>
+                <tbody id="diff-rows">
+                  <tr><td class="muted" colspan="3">변경된 항목이 없습니다.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section class="card">
+            <h2>검증</h2>
+            <div id="validation-results" aria-live="polite">
+              <p class="muted">검증을 실행하면 결과가 여기에 표시됩니다.</p>
+            </div>
+          </section>
+          <section class="card">
+            <h2>사용 안내</h2>
+            <ol>
+              <li>세이브 파일을 열고 편집할 항목을 선택하세요.</li>
+              <li>검증을 실행하고 변경 내역을 확인하세요.</li>
+              <li>저장 및 다운로드를 누르고 저장 내용을 확인하세요.</li>
+            </ol>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <form method="dialog">
+      <h2 id="confirm-title">저장 스냅샷 확인</h2>
+      <p id="confirm-message">변경 내용을 확인하고 저장하세요.</p>
+      <div id="confirm-details"></div>
+      <div id="backup-list" class="table-scroll" hidden></div>
+      <div class="dialog-actions">
+        <button id="btn-confirm-cancel" type="button" value="cancel" autofocus>취소</button>
+        <button id="btn-confirm-accept" class="primary" type="button" value="confirm">저장</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const themeSelect = document.getElementById("theme-select");
+    themeSelect.addEventListener("change", () => {
+      document.documentElement.dataset.theme = themeSelect.value;
+    });
+
+    const tablist = document.querySelector(".tabs");
+    const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+
+    function selectTab(selectedTab) {
+      for (const tab of tabs) {
+        const selected = tab === selectedTab;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        document.getElementById(tab.getAttribute("aria-controls")).hidden = !selected;
+      }
+    }
+
+    tablist.addEventListener("click", (event) => {
+      const tab = event.target.closest('[role="tab"]');
+      if (tab) selectTab(tab);
+    });
+
+    tablist.addEventListener("keydown", (event) => {
+      const activeIndex = tabs.indexOf(event.target);
+      if (activeIndex < 0) return;
+
+      let nextIndex;
+      switch (event.key) {
+        case "ArrowLeft":
+          nextIndex = (activeIndex + tabs.length - 1) % tabs.length;
+          break;
+        case "ArrowRight":
+          nextIndex = (activeIndex + 1) % tabs.length;
+          break;
+        case "Home":
+          nextIndex = 0;
+          break;
+        case "End":
+          nextIndex = tabs.length - 1;
+          break;
+        default:
+          return;
+      }
+
+      event.preventDefault();
+      selectTab(tabs[nextIndex]);
+      tabs[nextIndex].focus();
+    });
+  </script>
+  <script src="nrbf-codec.js"></script>
+  <script src="catalog-data.js"></script>
+  <script src="editor-core.js"></script>
+  <script src="editor-ui.js"></script>
+</body>
+</html>
