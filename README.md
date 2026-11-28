@@ -1,17 +1,17 @@
-# 강호록 세이브 에디터 v1.0.0 (`JianghuChroniclesSaveEditor`)
+# 강호록 세이브 에디터 v1.0.1 (`JianghuChroniclesSaveEditor`)
 
-**강호록(`Jianghu Chronicles`, Steam AppID `1909840`, BuildID `22708874`)** 전용 오프라인 3-Surface 세이브 편집기입니다.
+**강호록(`Jianghu Chronicles`, Steam AppID `1909840`, 정식판 `v1.3.0` / BuildID `26952086` 및 구버전 `v1.2.1` 호환)** 전용 오프라인 3-Surface 세이브 편집기입니다.
 
 ## 주요 실행 방식 (3종 표면)
 
-- **Windows x64 단독 실행 파일**: `JianghuChroniclesSaveEditor-v1.0.0.exe` (`.NET Framework 4.8` + `WebView2` 내장, `%USERPROFILE%\AppData\LocalLow\Yipinge\JHL\JHL_SAV\` 및 로컬 경로 탐색)
-- **단독 오프라인 HTML**: `dist/JianghuChroniclesSaveEditor-v1.0.0.html` (CSP `default-src 'none'; connect-src 'none'` 적용, 외부 네트워크 요청 0건, 자동/밝음/어두움 테마 지원)
+- **Windows x64 단독 실행 파일**: `JianghuChroniclesSaveEditor-v1.0.1.exe` (`.NET Framework 4.8` + `WebView2` 내장, `%USERPROFILE%\AppData\LocalLow\Yipinge\JHL\JHL_SAV\` 및 로컬 경로 탐색)
+- **단독 오프라인 HTML**: `dist/JianghuChroniclesSaveEditor-v1.0.1.html` (CSP `default-src 'none'; connect-src 'none'` 적용, 외부 네트워크 요청 0건, 자동/밝음/어두움 테마 지원, 통합 수묵 석금 `m1` 스킨 적용)
 - **Python 3 CLI 및 로컬 웹 서버**: `jhl_editor.py` (`discover`, `inspect`, `validate`, `presets`, `apply`, `restore`, `serve`, `--self-test`)
 
 ## 지원 세이브 형식 및 구조 (REA 검증 기반)
 
 - **바이너리 포맷**: `.NET BinaryFormatter` (MS-NRBF) 양방향 순수 JavaScript / Python stdlib 코덱 (무손실 SHA-256 라운드트립)
-  - `JHL_GameData*_*.sav`: `SGame.PlayerGameData` (`playerSchool` 및 `schoolGameDataList` 동시 동기화, 공유 참조 `buildingList` 보존)
+  - `JHL_GameData*_*.sav`: `SGame.PlayerGameData` (`playerSchool` 및 `schoolGameDataList` 동시 동기화, 공유 참조 `buildingList` 보존, `v1.3.0` 신규 필드 `BWGameData.isLocked`·`QiyuEventInfo.completedInteractions` 동적 무손실 보존)
   - `JHL_Summary_Data*.sav`: `SGame.StoreData`
 - **순수 한국어 카탈로그 (`tools/extract_catalog.py` → `src/catalog-data.js`)**: 한자·가나·외부 URL 0건
   - 15개 분류: 물품 997종, 무기 88종, 무기 분류 28종, 무기 속성 202종, 무공 223종, 특성 243종, 칭호 257종, 직책 10종, 문파 103종, 시설 28종, 선물 상품 16종, 연도 40종, 능력치 등급 7종, 명성 등급 5종, 전투 계산식 7종

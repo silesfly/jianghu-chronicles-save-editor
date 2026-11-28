@@ -791,7 +791,7 @@ def _commit(path, data, expected, ast=None):
 
 
 def serve(port=0, html_path=None, save_root=None, host="127.0.0.1", open_browser=False):
-    html_path = Path(html_path) if html_path else (Path(__file__).resolve().parent / "dist" / "JianghuChroniclesSaveEditor-v1.0.0.html")
+    html_path = Path(html_path) if html_path else (Path(__file__).resolve().parent / "dist" / "JianghuChroniclesSaveEditor-v1.0.1.html")
     if not html_path.is_file():
         html_path = Path(__file__).with_suffix(".html")
     html = html_path.read_bytes() if html_path.is_file() else b"<!DOCTYPE html><html><head><title>JHL Editor</title></head><body>JHL Editor</body></html>"

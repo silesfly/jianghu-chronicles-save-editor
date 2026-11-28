@@ -133,6 +133,9 @@ def field(
 
 
 def load_table(source: Path, filename: str) -> list[dict[str, Any]]:
+    update_path = source / "update_26952086/json_config_extracted" / filename
+    if update_path.exists():
+        return rows(update_path)
     return rows(source / "raw/json_config_extracted" / filename)
 
 

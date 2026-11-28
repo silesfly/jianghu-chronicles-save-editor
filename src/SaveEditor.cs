@@ -17,7 +17,7 @@ namespace JianghuChroniclesSaveEditor
 {
     internal static class Program
     {
-        internal const string Html = "JianghuChroniclesSaveEditor-v1.0.0.html";
+        internal const string Html = "JianghuChroniclesSaveEditor-v1.0.1.html";
 
         [STAThread]
         private static int Main(string[] args)
@@ -46,7 +46,7 @@ namespace JianghuChroniclesSaveEditor
 
                 string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "JianghuChroniclesSaveEditor");
-                string runtime = Path.Combine(root, "runtime-1.0.0");
+                string runtime = Path.Combine(root, "runtime-1.0.1");
                 using (Stream loader = OpenResource("WebView2Loader.dll"))
                 {
                     if (loader != null)

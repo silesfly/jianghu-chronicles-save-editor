@@ -110,7 +110,7 @@ async function confirm(page, name, required = true) {
 }
 
 async function offline(browser, savePath) {
-  const html = path.join(root, 'dist', 'JianghuChroniclesSaveEditor-v1.0.0.html');
+  const html = path.join(root, 'dist', 'JianghuChroniclesSaveEditor-v1.0.1.html');
   const { context, page, errors } = await openPage(browser, pathToFileURL(html).href, '브라우저 오프라인');
   try {
     const tabs = page.locator('[role="tab"]');

@@ -252,3 +252,76 @@ test('real saves retain their bytes and persist edits in both school records', (
   }
   if (editedCount === 0) t.diagnostic('Only summary fixtures were available for byte checks');
 });
+
+test('v1.3.0 catalog values and new NRBF fields (BWGameData.isLocked, QiyuEventInfo.completedInteractions) survive roundtrip and edits', () => {
+  const weaponsById = new Map(catalog.weapons.map((w) => [String(w.id), w]));
+  for (const id of ['J01', 'J02', 'J03']) {
+    const w = weaponsById.get(id);
+    assert.ok(w, `Expected weapon ${id} in catalog`);
+    assert.equal(w.damageRate, 4, `${id}: expected v1.3.0 damageRate 4`);
+  }
+
+  const graph = parseNrbf(createDemoNrbfBytes());
+  let nextId = 1;
+  for (const key of Object.keys(graph.objects)) {
+    const id = Number(key);
+    if (Number.isInteger(id)) nextId = Math.max(nextId, id + 1);
+  }
+  const bwRecord = {
+    recordType: 5,
+    objectId: nextId++,
+    className: 'SGame.BWGameData',
+    memberNames: ['id', 'isLocked'],
+    binaryTypes: [0, 0],
+    additionalInfos: [{ primitiveType: 8 }, { primitiveType: 1 }],
+    members: [
+      { name: 'id', binaryType: 0, additionalInfo: { primitiveType: 8 }, value: 42 },
+      { name: 'isLocked', binaryType: 0, additionalInfo: { primitiveType: 1 }, value: true },
+    ],
+    fields: { id: 42, isLocked: true },
+    libraryId: 1,
+    rawRecord: null,
+  };
+  const qiyuStrRecord = {
+    recordType: 6,
+    objectId: nextId++,
+    value: 'CZ1_01',
+    string: 'CZ1_01',
+  };
+  const qiyuRecord = {
+    recordType: 5,
+    objectId: nextId++,
+    className: 'SGame.QiyuEventInfo',
+    memberNames: ['completedInteractions'],
+    binaryTypes: [1],
+    additionalInfos: [null],
+    members: [
+      { name: 'completedInteractions', binaryType: 1, additionalInfo: null, value: qiyuStrRecord },
+    ],
+    fields: { completedInteractions: qiyuStrRecord },
+    libraryId: 1,
+    rawRecord: null,
+  };
+  graph.objects[bwRecord.objectId] = bwRecord;
+  graph.objects[qiyuStrRecord.objectId] = qiyuStrRecord;
+  graph.objects[qiyuRecord.objectId] = qiyuRecord;
+  const endIdx = graph.records.findIndex((r) => r.recordType === 11);
+  assert.ok(endIdx > 0, 'Expected MessageEnd record in NRBF stream');
+  graph.records.splice(endIdx, 0, bwRecord, qiyuRecord);
+
+  const v130Bytes = serializeNrbf(graph);
+  const reparsedUnmodified = parseNrbf(v130Bytes);
+  assert.equal(sha256(serializeNrbf(reparsedUnmodified)), sha256(v130Bytes), 'v1.3.0 unmodified roundtrip must be byte-stable');
+
+  const original = readState(reparsedUnmodified);
+  const edited = editState(original);
+  const afterEdit = reparse(reparsedUnmodified, edited);
+  assert.deepEqual(values(readState(afterEdit)), values(edited));
+
+  const bwAfter = afterEdit.records.find((r) => r.recordType === 5 && r.className === 'SGame.BWGameData');
+  const qiyuAfter = afterEdit.records.find((r) => r.recordType === 5 && r.className === 'SGame.QiyuEventInfo');
+  assert.ok(bwAfter, 'SGame.BWGameData must survive edit roundtrip');
+  assert.ok(qiyuAfter, 'SGame.QiyuEventInfo must survive edit roundtrip');
+  assert.equal(scalar(rawMembers(bwAfter).isLocked), true, 'BWGameData.isLocked must remain true');
+  assert.equal(scalar(resolveNode(afterEdit, rawMembers(qiyuAfter).completedInteractions)), 'CZ1_01', 'QiyuEventInfo.completedInteractions must survive');
+});
